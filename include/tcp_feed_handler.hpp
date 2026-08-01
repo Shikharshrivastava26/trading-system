@@ -17,11 +17,11 @@ struct WireOrder {
     uint64_t client_id;
     uint8_t  side;      // 0=BUY, 1=SELL
     uint8_t  type;      // 0=LIMIT, 1=MARKET
-    uint8_t  padding[6];
+    char     symbol[8]; // NUL-padded ticker, see Order::kSymbolLen
     double   price;
     uint64_t quantity;
 };
-static_assert(sizeof(WireOrder) == 40, "WireOrder must be 40 bytes");
+static_assert(sizeof(WireOrder) == 48, "WireOrder must be 48 bytes");
 
 struct WireTrade {
     uint64_t buy_order_id;

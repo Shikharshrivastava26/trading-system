@@ -5,12 +5,12 @@ import socket
 import struct
 import time
 
-WIRE_ORDER_FMT = "<QQ BB 6s d Q"
-PADDING = b"\x00" * 6
+WIRE_ORDER_FMT = "<QQ BB 8s 6x d Q"
 
-def make_wire_order(order_id, client_id, side, otype, price, quantity):
+def make_wire_order(order_id, client_id, side, otype, price, quantity, symbol="XYZ"):
+    sym = symbol.encode("ascii")[:8].ljust(8, b"\x00")
     return struct.pack(WIRE_ORDER_FMT,
-                       order_id, client_id, side, otype, PADDING, price, quantity)
+                       order_id, client_id, side, otype, sym, price, quantity)
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
