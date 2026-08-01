@@ -37,8 +37,34 @@ add_executable(threaded_tests tests/test_threaded_runner.cpp)
 target_link_libraries(threaded_tests PRIVATE matching_engine_lib GTest::gtest_main pthread)
 gtest_discover_tests(threaded_tests)
 
+# --- Phase 1 distributed system: replicated event log ---
+add_executable(log_queue_tests tests/test_log_backed_queue.cpp)
+target_link_libraries(log_queue_tests PRIVATE matching_engine_lib GTest::gtest_main pthread)
+gtest_discover_tests(log_queue_tests)
+
+# --- Phase 2 + 3: gateway/engine split, symbol sharding ---
+add_executable(sharding_tests tests/test_sharding.cpp)
+target_link_libraries(sharding_tests PRIVATE matching_engine_lib GTest::gtest_main pthread)
+gtest_discover_tests(sharding_tests)
+
+# --- Phase 4 + 5: failover leader lock, trades pub/sub ---
+add_executable(failover_pubsub_tests tests/test_failover_and_pubsub.cpp)
+target_link_libraries(failover_pubsub_tests PRIVATE matching_engine_lib GTest::gtest_main pthread)
+gtest_discover_tests(failover_pubsub_tests)
+
 add_executable(benchmark benchmarks/benchmark_queue.cpp)
 target_link_libraries(benchmark PRIVATE matching_engine_lib pthread)
 
 add_executable(server src/server_main.cpp src/tcp_feed_handler.cpp)
 target_link_libraries(server PRIVATE matching_engine_lib pthread)
+
+# --- Phase 2 + 3: split gateway / sharded engine tiers ---
+add_executable(gateway src/gateway_main.cpp src/tcp_feed_handler.cpp)
+target_link_libraries(gateway PRIVATE matching_engine_lib pthread)
+
+add_executable(engine src/engine_main.cpp)
+target_link_libraries(engine PRIVATE matching_engine_lib pthread)
+
+# --- Phase 5: independent trades subscriber demo ---
+add_executable(trades_subscriber src/trades_subscriber_main.cpp)
+target_link_libraries(trades_subscriber PRIVATE matching_engine_lib pthread)

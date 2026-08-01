@@ -204,6 +204,7 @@ Order TCPFeedHandler::wire_to_order(const WireOrder& w) {
     o.client_id          = w.client_id;
     o.side               = (w.side == 0) ? Side::BUY : Side::SELL;
     o.type               = (w.type == 0) ? OrderType::LIMIT : OrderType::MARKET;
+    std::memcpy(o.symbol, w.symbol, sizeof(o.symbol));
     o.price              = w.price;
     o.quantity           = w.quantity;
     o.remaining_quantity = w.quantity;

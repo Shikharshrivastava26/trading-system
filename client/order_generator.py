@@ -8,19 +8,20 @@ import time
 import random
 
 # WireOrder layout: uint64 order_id, uint64 client_id,
-#   uint8 side, uint8 type, 6 bytes padding, double price, uint64 quantity
-# Total 40 bytes, native little-endian (assuming x86).
-WIRE_ORDER_FMT = "<QQ BB 6s d Q"
+#   uint8 side, uint8 type, 8-byte symbol (NUL-padded), double price, uint64 quantity
+# Total 48 bytes, native little-endian (assuming x86). The struct's own
+# alignment inserts 6 bytes of padding between symbol and price so `double`
+# lands 8-byte aligned — that padding is implicit, not part of this format.
+WIRE_ORDER_FMT = "<QQ BB 8s 6x d Q"
 WIRE_ORDER_SIZE = struct.calcsize(WIRE_ORDER_FMT)
-assert WIRE_ORDER_SIZE == 40, f"Expected 40, got {WIRE_ORDER_SIZE}"
-
-PADDING = b"\x00" * 6
+assert WIRE_ORDER_SIZE == 48, f"Expected 48, got {WIRE_ORDER_SIZE}"
 
 
 def make_wire_order(order_id: int, client_id: int, side: int, otype: int,
-                    price: float, quantity: int) -> bytes:
+                    price: float, quantity: int, symbol: str = "XYZ") -> bytes:
+    sym = symbol.encode("ascii")[:8].ljust(8, b"\x00")
     return struct.pack(WIRE_ORDER_FMT,
-                       order_id, client_id, side, otype, PADDING, price, quantity)
+                       order_id, client_id, side, otype, sym, price, quantity)
 
 
 def main() -> None:
@@ -38,7 +39,8 @@ def main() -> None:
         otype = 0                             # LIMIT
         price = round(100.0 + random.uniform(-5, 5), 2)
         qty   = random.randint(1, 100)
-        data  = make_wire_order(i, 1, side, otype, price, qty)
+        symbol = random.choice(["XYZ", "ABC", "TATA"])
+        data  = make_wire_order(i, 1, side, otype, price, qty, symbol)
         sock.sendall(data)
 
     elapsed = time.monotonic() - start
